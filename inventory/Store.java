@@ -22,6 +22,7 @@ public class Store{
 			System.out.println("Error occurred while showing products: "+e);
 		} 
 	}
+
 	void purchase(int id, int quantity){ // only for customer
 		try{
 			String getQuery = "SELECT stock FROM products WHERE productId="+id;
@@ -43,6 +44,7 @@ public class Store{
 			System.out.println("Error occurred while purchasing product: "+e);
 		}
 	}
+
 	void add(String name, double price, int stock){ // only for seller, ek increase stock karke bhi rakhna
 		try{
 			String addQuery = "INSERT INTO products(name,price,stock) VALUES('"+name+"',"+price+","+stock+")";
@@ -51,9 +53,27 @@ public class Store{
 			System.out.println("Error occurred while adding product: "+e);
 		}
 	}
-	void updateStock(){
 
+	void updateStock(int id, int stock){
+		if(stock < 0){
+			System.out.println("UPDATE FAILED: Stock can not be negative.");
+			return;
+		}
+		try{
+			String getQuery = "SELECT * FROM products WHERE productId="+id;
+			ResultSet rs = Connect.executeStatement(getQuery,1);
+			if(!rs.next()){
+				System.out.println("UPDATE FAILED: Invalid product id");
+				return;
+			}
+			String updateQuery = "UPDATE products SET stock="+stock+" WHERE productId="+id ;
+			Connect.executeStatement(updateQuery,0);
+			System.out.println("UPDATE SUCCESSFUL!");
+		}catch(Exception e){
+			System.out.println("Error occurred while updating stock: "+e);
+		}
 	}
+
 	void showTransactionHistory(){
 		Connect.getDatabaseInfo();
 	}
@@ -61,7 +81,8 @@ public class Store{
 	public static void main(String args[]){
 		Scanner sc = new Scanner(System.in);
 		Store StoreManager = new Store();
-		int choice;
+		int choice, id, quantity, stock;
+		double price;
 		while(true){
 			System.out.println("\nWelcome to the inventory!");
 			System.out.println("Enter your choice: ");
@@ -79,9 +100,9 @@ public class Store{
 				case 2: 
 					StoreManager.showProducts();
 					System.out.print("Enter the id of the product you wish to buy: ");
-					int id = sc.nextInt();
+					id = sc.nextInt();
 					System.out.print("Enter the number of units you wish to buy: ");
-					int quantity = sc.nextInt();
+					quantity = sc.nextInt();
 					StoreManager.purchase(id,quantity);
 					break;
 				case 3:
@@ -89,13 +110,18 @@ public class Store{
 					sc.nextLine();
 					String name = sc.nextLine();
 					System.out.print("Enter product price: ");
-					double price = sc.nextDouble();
+					price = sc.nextDouble();
 					System.out.print("Enter product stock: ");
-					int stock = sc.nextInt();
+					stock = sc.nextInt();
 					StoreManager.add(name,price,stock);
 					break;
 				case 4:
-					StoreManager.updateStock();
+					StoreManager.showProducts();
+					System.out.print("Enter the id of the product you wish to update: ");
+					id = sc.nextInt();
+					System.out.print("Enter updated stock: ");
+					stock = sc.nextInt();
+					StoreManager.updateStock(id,stock);
 					break;
 				case 5:
 					StoreManager.showTransactionHistory();
