@@ -10,20 +10,38 @@ public class Store{
 			String getQuery = "SELECT * FROM products";
 			ResultSet rs = Connect.executeStatement(getQuery,1);
 			System.out.println("\n --- PRODUCTS IN INVENTORY ---");
-			System.out.format("%2s%32s%18s%10s\n","Id","Name","Price","Stock");
+			System.out.format("%10s%32s%18s%10s\n","ProductId","Name","Price","Stock");
 			while(rs.next()){
 				int id = rs.getInt("productId");
 				String productName = rs.getString("name");
 				double price = rs.getDouble("price");
 				int stock = rs.getInt("stock");
-				System.out.format("%2d%32s%18f%10d\n",id,productName,price,stock);
+				System.out.format("%10d%32s%18f%10d\n",id,productName,price,stock);
 			}
 		}catch(SQLException e){
 			System.out.println("Error occurred while showing products: "+e);
 		} 
 	}
-	void purchase(){ // only for customer
-	
+	void purchase(int id, int quantity){ // only for customer
+		try{
+			String getQuery = "SELECT stock FROM products WHERE productId="+id;
+			ResultSet rs = Connect.executeStatement(getQuery,1);
+			if(!rs.next()){
+				System.out.println("TRANSACTION FAILED: Invalid product id");
+				return;
+			}
+			int stock = rs.getInt("stock");
+			if(quantity > stock){
+				System.out.println("TRANSACTION FAILED: Insufficient stock.");
+				return;
+			}
+			stock -= quantity;
+			String updateQuery = "UPDATE products SET stock="+stock+" WHERE productId="+id ;
+			Connect.executeStatement(updateQuery,0);
+			System.out.println("TRANSACTION SUCCESSFUL!");
+		}catch(Exception e){
+			System.out.println("Error occurred while purchasing product: "+e);
+		}
 	}
 	void add(String name, double price, int stock){ // only for seller, ek increase stock karke bhi rakhna
 		try{
@@ -59,7 +77,12 @@ public class Store{
 					StoreManager.showProducts();
 					break;
 				case 2: 
-					StoreManager.purchase();
+					StoreManager.showProducts();
+					System.out.print("Enter the id of the product you wish to buy: ");
+					int id = sc.nextInt();
+					System.out.print("Enter the number of units you wish to buy: ");
+					int quantity = sc.nextInt();
+					StoreManager.purchase(id,quantity);
 					break;
 				case 3:
 					System.out.print("\nEnter product name: ");
