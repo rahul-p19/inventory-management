@@ -1,7 +1,5 @@
-all: Index.java
-	javac Index.java
-	javac Connect.java
-	javac Seed.java
-	javac Store.java
-	javac Product.java
-	java Index
+all: inventory/Store.java
+	javac -cp ".:db/derby.jar:db/derbyclient.jar:db/derbynet.jar:db/derbytools.jar:inventory" inventory/Connect.java
+	javac -cp ".:db/derby.jar:db/derbyclient.jar:db/derbynet.jar:db/derbytools.jar:inventory" inventory/Seed.java
+	javac -cp ".:db/derby.jar:db/derbyclient.jar:db/derbynet.jar:db/derbytools.jar:inventory" inventory/Store.java
+	java -cp ".:db/derby.jar:db/derbyclient.jar:db/derbynet.jar:db/derbytools.jar:inventory" inventory/Store
