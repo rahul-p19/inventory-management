@@ -1,1 +1,2 @@
-*.class
+inventory/*.class
+derby.log
