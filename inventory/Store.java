@@ -52,9 +52,12 @@ public class Store{
 			stock -= quantity;
 			String updateQuery = "UPDATE products SET stock="+stock+" WHERE productId="+id ;
 			Connect.executeStatement(updateQuery,0);
-			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + productName + "','purchase',"+price+","+quantity+","+ (price*quantity)+", 'customer')";
+
 			System.out.println("TRANSACTION SUCCESSFUL! Amount = "+ (quantity * price));
+
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + productName + "','purchase',"+price+","+quantity+","+ (price*quantity)+", 'customer')";
 			Connect.executeStatement(recordTransaction,0);
+
 		}catch(Exception e){
 			System.out.println("Error occurred while purchasing product: "+e);
 		}
@@ -64,6 +67,10 @@ public class Store{
 		try{
 			String addQuery = "INSERT INTO products(name,price,stock) VALUES('"+name+"',"+price+","+stock+")";
 			Connect.executeStatement(addQuery,0);
+
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + name + "','product listing',"+price+","+stock+","+ 0 +", 'seller')";
+			Connect.executeStatement(recordTransaction,0);
+
 		}catch(Exception e){
 			System.out.println("Error occurred while adding product: "+e);
 		}
@@ -81,9 +88,15 @@ public class Store{
 				System.out.println("UPDATE FAILED: Invalid product id");
 				return;
 			}
+			String name = rs.getString("name");
+			double price = rs.getDouble("price");
 			String updateQuery = "UPDATE products SET stock="+stock+" WHERE productId="+id ;
 			Connect.executeStatement(updateQuery,0);
 			System.out.println("UPDATE SUCCESSFUL!");
+			
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + name + "','stock update',"+price+","+stock+","+ 0 +", 'seller')";
+			Connect.executeStatement(recordTransaction,0);
+
 		}catch(Exception e){
 			System.out.println("Error occurred while updating stock: "+e);
 		}
