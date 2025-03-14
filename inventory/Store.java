@@ -3,20 +3,31 @@ package inventory;
 import java.util.Scanner;
 import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class Store{
+
+	private static String getTimestamp(){
+		ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"));
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		String timestamp = now.format(formatter);
+		return timestamp;	
+	}
+
 	void showProducts(){
 		try{		
 			String getQuery = "SELECT * FROM products";
 			ResultSet rs = Connect.executeStatement(getQuery,1);
 			System.out.println("\n --- PRODUCTS IN INVENTORY ---");
-			System.out.format("%10s%32s%18s%10s\n","ProductId","Name","Price","Stock");
+			System.out.format("%10s%24s%18s%10s\n","ProductId","Name","Price","Stock");
 			while(rs.next()){
 				int id = rs.getInt("productId");
 				String productName = rs.getString("name");
 				double price = rs.getDouble("price");
 				int stock = rs.getInt("stock");
-				System.out.format("%10d%32s%18f%10d\n",id,productName,price,stock);
+				System.out.format("%10d%24s%18f%10d\n",id,productName,price,stock);
 			}
 		}catch(SQLException e){
 			System.out.println("Error occurred while showing products: "+e);
@@ -25,13 +36,15 @@ public class Store{
 
 	void purchase(int id, int quantity){ // only for customer
 		try{
-			String getQuery = "SELECT stock FROM products WHERE productId="+id;
+			String getQuery = "SELECT * FROM products WHERE productId="+id;
 			ResultSet rs = Connect.executeStatement(getQuery,1);
 			if(!rs.next()){
 				System.out.println("TRANSACTION FAILED: Invalid product id");
 				return;
 			}
 			int stock = rs.getInt("stock");
+			String productName = rs.getString("name");
+			double price = rs.getDouble("price");
 			if(quantity > stock){
 				System.out.println("TRANSACTION FAILED: Insufficient stock.");
 				return;
@@ -39,7 +52,9 @@ public class Store{
 			stock -= quantity;
 			String updateQuery = "UPDATE products SET stock="+stock+" WHERE productId="+id ;
 			Connect.executeStatement(updateQuery,0);
-			System.out.println("TRANSACTION SUCCESSFUL!");
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + productName + "','purchase',"+price+","+quantity+","+ (price*quantity)+", 'customer')";
+			System.out.println("TRANSACTION SUCCESSFUL! Amount = "+ (quantity * price));
+			Connect.executeStatement(recordTransaction,0);
 		}catch(Exception e){
 			System.out.println("Error occurred while purchasing product: "+e);
 		}
@@ -75,7 +90,25 @@ public class Store{
 	}
 
 	void showTransactionHistory(){
-		Connect.getDatabaseInfo();
+		try{		
+			String getQuery = "SELECT * FROM transactions";
+			ResultSet rs = Connect.executeStatement(getQuery,1);
+			System.out.println("\n --- TRANSACTION HISTORY ---");
+			System.out.format("%14s%24s%20s%24s%18s%10s%18s%12s\n","TransactionId", "Timestamp", "TransactionType", "ProductName","Price","Quantity","Amount","UserType");
+			while(rs.next()){
+				int id = rs.getInt("transactionId");
+				String transactionTime = rs.getString("timestamp");
+				String transactionType = rs.getString("transactionType");
+				String productName = rs.getString("productName");
+				double price = rs.getDouble("price");
+				int quantity = rs.getInt("quantity");
+				double amount = rs.getDouble("amount");
+				String userType = rs.getString("userType");
+				System.out.format("%14s%24s%20s%24s%18s%10s%18s%12s\n", id, transactionTime, transactionType, productName, price, quantity, amount, userType);
+			}
+		}catch(SQLException e){
+			System.out.println("Error occurred while showing transaction history: "+e);
+		} 
 	}
 
 	public static void main(String args[]){
