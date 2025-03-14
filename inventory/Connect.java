@@ -10,13 +10,12 @@ import java.sql.DatabaseMetaData;
 public class Connect{
 	private static Connection conn;
 
-	private static final String DB_URL = "jdbc:derby:memory:testDB;create=true";
+	private static final String DB_URL = "jdbc:derby:./db/inventoryDB;create=true";
 
 	static{
 		try{
 			Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
 			conn = DriverManager.getConnection(DB_URL);
-			Seed.seedDatabase();	
 		}catch(Exception e){
 			System.out.println("Error occurred while connecting to database: "+e);
 		}
