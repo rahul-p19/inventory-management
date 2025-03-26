@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 
 public class Store{
 
@@ -35,7 +37,7 @@ public class Store{
 	}
 
 	void purchase(int id, int quantity, String username){ // only for customer
-		try{
+		try(BufferedWriter bw = new BufferedWriter(new FileWriter("db.txt",true))){
 			String getQuery = "SELECT * FROM products WHERE productId="+id;
 			ResultSet rs = Connect.executeStatement(getQuery,1);
 			if(!rs.next()){
@@ -55,8 +57,13 @@ public class Store{
 
 			System.out.println("TRANSACTION SUCCESSFUL! Amount = "+ (quantity * price));
 
-			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+getTimestamp() + "','" + productName + "','purchase',"+price+","+quantity+","+ (price*quantity)+", '" + username +"')";
+			String currentTime = getTimestamp();
+
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+ currentTime + "','" + productName + "','purchase',"+price+","+quantity+","+ (price*quantity)+", '" + username +"')";
 			Connect.executeStatement(recordTransaction,0);
+
+			String log = currentTime + " - " + productName + " - purchase - " + username + "\n";
+			bw.write(log);
 
 		}catch(Exception e){
 			System.out.println("Error occurred while purchasing product: "+e);
@@ -64,12 +71,17 @@ public class Store{
 	}
 
 	void add(String name, double price, int stock, String username){ 
-		try{
+		try(BufferedWriter bw = new BufferedWriter(new FileWriter("db.txt",true))){
 			String addQuery = "INSERT INTO products(name,price,stock) VALUES('"+name+"',"+price+","+stock+")";
 			Connect.executeStatement(addQuery,0);
 
-			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+getTimestamp() + "','" + name + "','product listing',"+price+","+stock+","+ 0 +", '" + username + "')";
+			String currentTime = getTimestamp();
+
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+ currentTime + "','" + name + "','product listing',"+price+","+stock+","+ 0 +", '" + username + "')";
 			Connect.executeStatement(recordTransaction,0);
+
+			String log = currentTime + " - " + name + " - product listing - " + username + "\n";
+			bw.write(log);
 
 		}catch(Exception e){
 			System.out.println("Error occurred while adding product: "+e);
@@ -81,7 +93,7 @@ public class Store{
 			System.out.println("UPDATE FAILED: Stock can not be negative.");
 			return;
 		}
-		try{
+		try(BufferedWriter bw = new BufferedWriter(new FileWriter("db.txt",true))){
 			String getQuery = "SELECT * FROM products WHERE productId="+id;
 			ResultSet rs = Connect.executeStatement(getQuery,1);
 			if(!rs.next()){
@@ -93,9 +105,14 @@ public class Store{
 			String updateQuery = "UPDATE products SET stock="+stock+" WHERE productId="+id ;
 			Connect.executeStatement(updateQuery,0);
 			System.out.println("UPDATE SUCCESSFUL!");
+
+			String currentTime = getTimestamp();
 			
-			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+getTimestamp() + "','" + name + "','stock update',"+price+","+stock+","+ 0 +", '" + username + "')";
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+ currentTime + "','" + name + "','stock update',"+price+","+stock+","+ 0 +", '" + username + "')";
 			Connect.executeStatement(recordTransaction,0);
+
+			String log = currentTime + " - " + name + " - stock update - " + username + "\n";
+			bw.write(log);
 
 		}catch(Exception e){
 			System.out.println("Error occurred while updating stock: "+e);
