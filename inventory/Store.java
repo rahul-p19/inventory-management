@@ -34,7 +34,7 @@ public class Store{
 		} 
 	}
 
-	void purchase(int id, int quantity){ // only for customer
+	void purchase(int id, int quantity, String username){ // only for customer
 		try{
 			String getQuery = "SELECT * FROM products WHERE productId="+id;
 			ResultSet rs = Connect.executeStatement(getQuery,1);
@@ -55,7 +55,7 @@ public class Store{
 
 			System.out.println("TRANSACTION SUCCESSFUL! Amount = "+ (quantity * price));
 
-			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + productName + "','purchase',"+price+","+quantity+","+ (price*quantity)+", 'customer')";
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+getTimestamp() + "','" + productName + "','purchase',"+price+","+quantity+","+ (price*quantity)+", '" + username +"')";
 			Connect.executeStatement(recordTransaction,0);
 
 		}catch(Exception e){
@@ -63,12 +63,12 @@ public class Store{
 		}
 	}
 
-	void add(String name, double price, int stock){ // only for seller, ek increase stock karke bhi rakhna
+	void add(String name, double price, int stock, String username){ 
 		try{
 			String addQuery = "INSERT INTO products(name,price,stock) VALUES('"+name+"',"+price+","+stock+")";
 			Connect.executeStatement(addQuery,0);
 
-			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + name + "','product listing',"+price+","+stock+","+ 0 +", 'seller')";
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+getTimestamp() + "','" + name + "','product listing',"+price+","+stock+","+ 0 +", '" + username + "')";
 			Connect.executeStatement(recordTransaction,0);
 
 		}catch(Exception e){
@@ -76,7 +76,7 @@ public class Store{
 		}
 	}
 
-	void updateStock(int id, int stock){
+	void updateStock(int id, int stock, String username){
 		if(stock < 0){
 			System.out.println("UPDATE FAILED: Stock can not be negative.");
 			return;
@@ -94,7 +94,7 @@ public class Store{
 			Connect.executeStatement(updateQuery,0);
 			System.out.println("UPDATE SUCCESSFUL!");
 			
-			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,userType) VALUES('"+getTimestamp() + "','" + name + "','stock update',"+price+","+stock+","+ 0 +", 'seller')";
+			String recordTransaction = "INSERT INTO transactions(timestamp,productName,transactionType,price,quantity,amount,username) VALUES('"+getTimestamp() + "','" + name + "','stock update',"+price+","+stock+","+ 0 +", '" + username + "')";
 			Connect.executeStatement(recordTransaction,0);
 
 		}catch(Exception e){
@@ -107,7 +107,7 @@ public class Store{
 			String getQuery = "SELECT * FROM transactions";
 			ResultSet rs = Connect.executeStatement(getQuery,1);
 			System.out.println("\n --- TRANSACTION HISTORY ---");
-			System.out.format("%14s%24s%20s%24s%18s%10s%18s%12s\n","TransactionId", "Timestamp", "TransactionType", "ProductName","Price","Quantity","Amount","UserType");
+			System.out.format("%14s%24s%20s%24s%18s%10s%18s%12s\n","TransactionId", "Timestamp", "TransactionType", "ProductName","Price","Quantity","Amount","User");
 			while(rs.next()){
 				int id = rs.getInt("transactionId");
 				String transactionTime = rs.getString("timestamp");
@@ -116,8 +116,8 @@ public class Store{
 				double price = rs.getDouble("price");
 				int quantity = rs.getInt("quantity");
 				double amount = rs.getDouble("amount");
-				String userType = rs.getString("userType");
-				System.out.format("%14s%24s%20s%24s%18s%10s%18s%12s\n", id, transactionTime, transactionType, productName, price, quantity, amount, userType);
+				String user = rs.getString("username");
+				System.out.format("%14s%24s%20s%24s%18s%10s%18s%12s\n", id, transactionTime, transactionType, productName, price, quantity, amount, user);
 			}
 		}catch(SQLException e){
 			System.out.println("Error occurred while showing transaction history: "+e);
@@ -128,6 +128,7 @@ public class Store{
 		Scanner sc = new Scanner(System.in);
 		Store StoreManager = new Store();
 		int choice, id, quantity, stock;
+		String username;
 		double price;
 		while(true){
 			System.out.println("\nWelcome to the inventory!");
@@ -149,7 +150,10 @@ public class Store{
 					id = sc.nextInt();
 					System.out.print("Enter the number of units you wish to buy: ");
 					quantity = sc.nextInt();
-					StoreManager.purchase(id,quantity);
+					sc.nextLine();
+					System.out.print("Enter your name: ");
+					username = sc.nextLine();
+					StoreManager.purchase(id,quantity,username);
 					break;
 				case 3:
 					System.out.print("\nEnter product name: ");
@@ -159,7 +163,10 @@ public class Store{
 					price = sc.nextDouble();
 					System.out.print("Enter product stock: ");
 					stock = sc.nextInt();
-					StoreManager.add(name,price,stock);
+					sc.nextLine();
+					System.out.print("Enter your name: ");
+					username = sc.nextLine();
+					StoreManager.add(name,price,stock,username);
 					break;
 				case 4:
 					StoreManager.showProducts();
@@ -167,7 +174,10 @@ public class Store{
 					id = sc.nextInt();
 					System.out.print("Enter updated stock: ");
 					stock = sc.nextInt();
-					StoreManager.updateStock(id,stock);
+					sc.nextLine();
+					System.out.print("Enter your name: ");
+					username = sc.nextLine();
+					StoreManager.updateStock(id,stock,username);
 					break;
 				case 5:
 					StoreManager.showTransactionHistory();
