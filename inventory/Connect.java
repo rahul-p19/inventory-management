@@ -16,6 +16,7 @@ public class Connect{
 		try{
 			Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
 			conn = DriverManager.getConnection(DB_URL);
+			System.setProperty("derby.language.sequence.preallocator", "1");
 		}catch(Exception e){
 			System.out.println("Error occurred while connecting to database: "+e);
 		}
